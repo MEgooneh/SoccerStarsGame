@@ -18,6 +18,38 @@ class Object:
         self.velocity = velocity
         self._updated_velocity = velocity.copy()
 
+    def is_in_left_goal(self) -> bool:
+        return (
+            settings.GOAL_UP_BORDER <= self.pos[1] - self.radius and
+            self.pos[1] + self.radius <= settings.GOAL_DOWN_BORDER and
+            self.pos[0] - self.radius < settings.PITCH_LEFT_BORDER
+        )
+
+    def is_completely_in_left_goal(self) -> bool:
+        return (
+            self.is_in_left_goal() and
+            self.pos[0] + self.radius <= settings.PITCH_LEFT_BORDER
+        )
+
+    def is_in_right_goal(self) -> bool:
+        return (
+            settings.GOAL_UP_BORDER <= self.pos[1] - self.radius and
+            self.pos[1] + self.radius <= settings.GOAL_DOWN_BORDER and
+            self.pos[0] + self.radius > settings.PITCH_RIGHT_BORDER
+        )
+    
+    def is_completely_in_right_goal(self) -> bool:
+        return (
+            self.is_in_right_goal and
+            self.pos[0] - self.radius > settings.PITCH_RIGHT_BORDER
+        )
+
+    def is_in_goal(self) -> bool:
+        return self.is_in_left_goal() or self.is_in_right_goal()
+
+    def is_completely_in_goal(self) -> bool:
+        return self.is_completely_in_left_goal() or self.is_completely_in_right_goal()
+
     def collision_to_object_physical_update(self, other):
         if self.pos[0] - other.pos[0] == 0:
             theta = np.pi/2

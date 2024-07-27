@@ -128,25 +128,20 @@ class Board:
         self.reset_ball_state()
         self.reset_players_state()
 
-    def is_idle(self):
+    def is_idle(self) -> bool:
         for obj in self.all_objects:
             if obj.velocity.any():
                 return False
         return True
 
-    def which_side_scored(self):
-        if  not (settings.GOAL_UP_BORDER <= self.ball.pos[1] - self.ball.radius and
-                self.ball.pos[1] + self.ball.radius <= settings.GOAL_DOWN_BORDER):
-            return None
-        
-        if self.ball.pos[0] + self.ball.radius <= settings.PITCH_LEFT_BORDER:
+    def which_side_scored(self) -> Side | None:       
+        if self.ball.is_completely_in_left_goal():
             return Side.BLUE
-        elif self.ball.pos[0] - self.ball.radius >= settings.PITCH_RIGHT_BORDER:
+        elif self.ball.is_completely_in_right_goal():
             return Side.RED
-        
         return None
 
-    def is_goal(self):
+    def is_goal_opened(self) -> bool:
         return self.which_side_scored() is not None
 
     def draw_objects(self, objects: list[Object]):
