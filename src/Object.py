@@ -15,7 +15,7 @@ class Object:
         self.mass = mass
         self.radius = radius
         self.pos = pos
-        self.velocity = velocity
+        self.velocity = velocity.astype(np.longdouble)
         self._updated_velocity = velocity.copy()
 
     def is_in_left_goal(self) -> bool:
@@ -112,11 +112,8 @@ class Object:
             self.check_collision_to_metal_border()
 
     def check_collision_to_object(self):
-        objects = self.game.board.all_objects
-        for obj in objects:
-            if (obj is self):
-                continue
-
+        other_objects = [object for object in self.game.board.all_objects if object != self]
+        for obj in other_objects:
             if np.linalg.norm(obj.pos - self.pos) <= obj.radius + self.radius:
                 self.collision_to_object_update(obj)
 
@@ -125,19 +122,14 @@ class Object:
         self.check_collision_to_object()
             
     def put_player_out_of_the_goal(self):
-        if (settings.GOAL_UP_BORDER <= self.pos[1] - self.radius and
-                self.pos[1] + self.radius <= settings.GOAL_DOWN_BORDER
-                ):  
-            if self.pos[0] - self.radius < settings.PITCH_LEFT_BORDER:
-                self.pos[0] = settings.PITCH_LEFT_BORDER + self.radius + 1
-            elif self.pos[0] + self.radius > settings.PITCH_RIGHT_BORDER:
-                self.pos[0] = settings.PITCH_RIGHT_BORDER - self.radius - 1
+        if self.is_in_left_goal():
+            self.pos[0] = settings.PITCH_LEFT_BORDER + self.radius + 1
+        elif self.is_in_right_goal():
+            self.pos[0] = settings.PITCH_RIGHT_BORDER - self.radius - 1
                  
-
     def object_stop_condition(self):
-        LIMIT_OF_STOPPING_OBJECT = 20
-        if np.linalg.norm(self._updated_velocity) < LIMIT_OF_STOPPING_OBJECT:
-            self._updated_velocity = np.zeros((2)) 
+        if np.linalg.norm(self._updated_velocity) < settings.MINIMUM_OF_VELOCITY_TO_STOPPING_OBJECT:
+            self._updated_velocity = np.zeros((2), dtype=np.longdouble) 
 
     def pre_update_velocity(self):
         self._updated_velocity = self.velocity.copy()

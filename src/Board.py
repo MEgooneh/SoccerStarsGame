@@ -47,7 +47,7 @@ class Board:
             (settings.PITCH_LEFT_BORDER + settings.PITCH_RIGHT_BORDER) // 2,
             (settings.PITCH_UP_BORDER + settings.PITCH_DOWN_BORDER) // 2
         ])
-        ball = Ball(game=self.game, pos=middle_of_screen_position, velocity=np.zeros((2)))
+        ball = Ball(game=self.game, pos=middle_of_screen_position, velocity=np.zeros((2), dtype=np.longdouble))
         self.ball = ball
 
     def create_defenders_list(self, side: Side, coordinates: list):
@@ -98,23 +98,23 @@ class Board:
     def reset_players_state(self):
         left_coordinates = settings.LEFT_SIDE_COORDINATES
         self.left_goalkeeper.pos = np.array(left_coordinates["goalkeeper"])
-        self.left_goalkeeper.velocity = np.zeros((2))
+        self.left_goalkeeper.velocity = np.zeros((2), dtype=np.longdouble)
         for defender, cor in zip(self.left_defenders, left_coordinates["defenders"]):
             defender.pos = np.array(cor)
-            defender.velocity = np.zeros((2))
+            defender.velocity = np.zeros((2), dtype=np.longdouble)
         for striker, cor in zip(self.left_strikers, left_coordinates["strikers"]):
             striker.pos = np.array(cor)
-            striker.velocity = np.zeros((2))
+            striker.velocity = np.zeros((2), dtype=np.longdouble)
 
         right_coordinates = settings.RIGHT_SIDE_COORDINATES
         self.right_goalkeeper.pos = np.array(right_coordinates["goalkeeper"])
-        self.right_goalkeeper.velocity = np.zeros((2))
+        self.right_goalkeeper.velocity = np.zeros((2), dtype=np.longdouble)
         for defender, cor in zip(self.right_defenders, right_coordinates["defenders"]):
             defender.pos = np.array(cor)
-            defender.velocity = np.zeros((2))
+            defender.velocity = np.zeros((2), dtype=np.longdouble)
         for striker, cor in zip(self.right_strikers, right_coordinates["strikers"]):
             striker.pos = np.array(cor)
-            striker.velocity = np.zeros((2))
+            striker.velocity = np.zeros((2), dtype=np.longdouble)
         
     def reset_ball_state(self):
         middle_of_screen_position = np.array([
@@ -122,7 +122,7 @@ class Board:
             (settings.PITCH_UP_BORDER + settings.PITCH_DOWN_BORDER) // 2
         ])
         self.ball.pos = np.array(middle_of_screen_position)
-        self.ball.velocity = np.zeros((2))
+        self.ball.velocity = np.zeros((2), dtype=np.longdouble)
 
     def reset_board_state(self):
         self.reset_ball_state()

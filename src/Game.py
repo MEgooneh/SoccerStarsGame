@@ -44,11 +44,10 @@ class Game:
         self.dragged_player: Player = None
         self.dragging_mouse_pos: np.ndarray = None
         self.board: Board = Board(self)    
-        self._prev_board_idle_status : bool | None = None
+        self._prev_frame_board_was_idle : bool | None = None
         self.winner = None
         self.is_finished = False
         self.pygame_init()
-
 
     def is_ceremony_running(self) -> bool:
         return self.rules_freezed_for_ceremony_finish_time > pygame.time.get_ticks()
@@ -59,6 +58,9 @@ class Game:
     def is_goal_ceremony_running(self) -> bool:
         return self.is_ceremony_running() and not self.is_finished
     
+    def end_of_turn_jobs(self):
+        pass
+
     def update(self):
         objects = self.board.all_objects
         for obj in objects:
@@ -70,13 +72,15 @@ class Game:
         for obj in objects:
             obj.update_pos()
 
-        if self._prev_board_idle_status != self.board.is_idle():
+        if self._prev_frame_board_was_idle != self.board.is_idle():
             for player in self.board.all_players:
                 player.put_player_out_of_the_goal()
             self.board.left_goalkeeper.keep_goalkeeper_in_penalty_area()
             self.board.right_goalkeeper.keep_goalkeeper_in_penalty_area()
-        self._prev_board_idle_status = self.board.is_idle()
+        self._prev_frame_board_was_idle = self.board.is_idle()
 
+    def swap_turn(self):
+        self.turn = Side.RED if self.turn == Side.BLUE else Side.BLUE
 
     def start_dragging_player(self, obj):
         self.dragged_player = obj
@@ -86,7 +90,7 @@ class Game:
         releasing_force_booster = 2.5
         if isinstance(self.dragged_player, Striker):
             releasing_force_booster = 3.5
-        self.dragged_player.velocity = releasing_force_booster*(self.dragged_player.pos - self.dragging_mouse_pos).astype('float64')
+        self.dragged_player.velocity = releasing_force_booster*(self.dragged_player.pos - self.dragging_mouse_pos).astype(np.longdouble)
         self.dragged_player = None
         self.dragging_mouse_pos = None
         self.swap_turn()
@@ -151,11 +155,12 @@ class Game:
         if self.is_winner_ceremony_running():
             self.board.show_winner_ceremony(self.winner)
 
-        
-
     def pygame_update(self):
         self.update()
         pygame.display.flip()
+
+    def play_crowd_clapping_sound(self):
+        self.media.crowd_clapping_sound.play()
 
     def winner_ceremony_start(self):
         self.rules_freezed_for_ceremony_finish_time = pygame.time.get_ticks() + settings.WINNER_CEREMONY_TIME
@@ -176,8 +181,7 @@ class Game:
         self.is_finished = True
         self.winner_ceremony_start()
 
-    def play_crowd_clapping_sound(self):
-        self.media.crowd_clapping_sound.play()
+    
 
     def goal_ceremony_start(self):
         self.rules_freezed_for_ceremony_finish_time = pygame.time.get_ticks() + settings.GOAL_CEREMONY_TIME
@@ -220,8 +224,7 @@ class Game:
         
         self.scored(scored_side)
 
-    def swap_turn(self):
-        self.turn = Side.RED if self.turn == Side.BLUE else Side.BLUE
+
         
     def run(self):
         running = True

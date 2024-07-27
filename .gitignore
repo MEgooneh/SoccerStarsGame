@@ -1,1 +1,21 @@
+# Python
+*.pyc
 __pycache__/
+
+# Pygame
+*.pyo
+*.pyd
+*.dll
+*.so
+*.dylib
+
+# IDE/Editor specific
+.vscode/
+.idea/
+
+# Compiled files
+*.exe
+*.out
+
+# Miscellaneous
+.DS_Store

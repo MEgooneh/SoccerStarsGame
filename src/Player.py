@@ -49,7 +49,7 @@ class GoalKeeper(Player):
 
     MASS = 2
     RADIUS = 30
-    def __init__(self, game:'Game', side: Side, pos: np.ndarray, velocity: np.ndarray = np.zeros((2))):
+    def __init__(self, game:'Game', side: Side, pos: np.ndarray, velocity: np.ndarray = np.zeros((2), dtype=np.longdouble)):
         super().__init__(game, GoalKeeper.MASS, GoalKeeper.RADIUS, side, pos, velocity)
 
     def keep_goalkeeper_in_penalty_area(self):
@@ -89,7 +89,7 @@ class Defender(Player):
 
     MASS = 3
     RADIUS = 35
-    def __init__(self, game:'Game', side: Side, pos: np.ndarray, velocity: np.ndarray = np.zeros((2))):
+    def __init__(self, game:'Game', side: Side, pos: np.ndarray, velocity: np.ndarray = np.zeros((2), dtype=np.longdouble)):
         super().__init__(game, Defender.MASS, Defender.RADIUS, side, pos, velocity)
 
     def draw(self, screen: pygame.Surface):
@@ -117,7 +117,7 @@ class Striker(Player):
 
     MASS = 1.5
     RADIUS = 30
-    def __init__(self, game:'Game', side: Side, pos: np.ndarray, velocity: np.ndarray=np.zeros((2))):
+    def __init__(self, game:'Game', side: Side, pos: np.ndarray, velocity: np.ndarray=np.zeros((2), dtype=np.longdouble)):
         super().__init__(game, Striker.MASS, Striker.RADIUS, side, pos, velocity)
 
     def draw(self, screen: pygame.Surface):
