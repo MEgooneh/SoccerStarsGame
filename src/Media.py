@@ -101,8 +101,9 @@ class MediaLoader:
         self.load_ball_kick_sounds()
 
     def load_fonts(self):
-        self.font = pygame.font.SysFont('Arial', 48)
-
+        self.large_font = pygame.font.SysFont('Arial', 48)
+        self.font = pygame.font.SysFont('Arial', 30)
+        
     def load_gifs(self):
         self.goal_ceremony_gif = self.load_gif("goal_ceremony.gif")
         self.blue_winning_ceremony_gif = self.load_gif("blue_winning.gif")

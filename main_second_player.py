@@ -5,7 +5,7 @@ from src.SocketClient import SocketClient
 import logging
 
 if __name__ == '__main__':
-    me = UserRegisterRequest(username="megooneh")
+    me = UserRegisterRequest(username="user2")
     socket = SocketClient()
     socket.connect()
     socket.register(user_register_request=me)

@@ -159,29 +159,44 @@ class Board:
         end_time = self.game.rules_freezed_for_ceremony_finish_time
         self.game.media.play_gif(gif, end_time, self.screen)
         
-
     def show_winner_ceremony(self, winner):
         if winner == Side.RED:
             gif = self.game.media.red_winning_ceremony_gif
         elif winner == Side.BLUE:
             gif = self.game.media.blue_winning_ceremony_gif
         else:
-            raise "winner is None. can't play winner ceremony"
+            raise Exception("winner is None. can't play winner ceremony")
         
         end_time = self.game.rules_freezed_for_ceremony_finish_time
         self.game.media.play_gif(gif, end_time, self.screen)
-        
 
-    def show_scoreboard(self):
+    def show_names(self):
+        red_name = self.game.left_side_name
+        red_name_surface = self.game.media.font.render(red_name, True, "grey")
+        red_name_rect = red_name_surface.get_rect(center=settings.SCOREBAR_PLACE_RED_NAME)
+        self.screen.blit(red_name_surface, red_name_rect)
+
+        blue_name = self.game.right_side_name
+        blue_name_surface = self.game.media.font.render(blue_name, True, "grey")
+        blue_name_rect = blue_name_surface.get_rect(center=settings.SCOREBAR_PLACE_BLUE_NAME)
+        self.screen.blit(blue_name_surface, blue_name_rect)
+
+    def show_scores(self):
         red_score = str(self.game.scores[Side.RED])
-        red_score_surface = self.game.media.font.render(red_score, True, "white")
+        red_score_surface = self.game.media.large_font.render(red_score, True, "white")
         red_score_rect = red_score_surface.get_rect(center=settings.SCOREBAR_PLACE_RED_SCORE)
         self.screen.blit(red_score_surface, red_score_rect)
 
         blue_score = str(self.game.scores[Side.BLUE])
-        blue_score_surface = self.game.media.font.render(blue_score, True, "white")
+        blue_score_surface = self.game.media.large_font.render(blue_score, True, "white")
         blue_score_rect = blue_score_surface.get_rect(center=settings.SCOREBAR_PLACE_BLUE_SCORE)
         self.screen.blit(blue_score_surface, blue_score_rect)
+
+    def show_scoreboard(self):
+        self.show_scores()
+        self.show_names()
+
+    
 
 
 
