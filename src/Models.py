@@ -2,7 +2,9 @@ from pydantic import BaseModel, IPvAnyAddress
 import numpy as np
 
 from .Player import Side
+import settings
 from utils.time import now_time
+
 
 from uuid import UUID, uuid4
 import json
@@ -12,12 +14,10 @@ import logging
 
 
 class User(BaseModel):
-    uid: UUID = uuid4()
+    uid: int = 0
     ip: IPvAnyAddress
     port: int
     username: str | None = None
-
-    
 
 class UserRegisterRequest(BaseModel):
     username: str = ""
@@ -47,7 +47,7 @@ class MouseStatus(Enum):
     CLICK_HOLD = 2
     IDLE = 3
 
-class MousePosition(BaseModel):
+class Position(BaseModel):
     x: int = 0
     y: int = 0
 
@@ -55,7 +55,7 @@ class MousePosition(BaseModel):
         return np.array((self.x, self.y))
     
 class MouseModel(BaseModel):
-    pos: MousePosition = MousePosition()
+    pos: Position = Position()
     status: MouseStatus = MouseStatus.IDLE
 
     def get_pos(self) -> np.ndarray:
@@ -76,17 +76,15 @@ class MouseUpdate(BaseModel):
     mouse: MouseModel
     created_at: float = now_time()
 
-class SwapTurn(BaseModel):
-    side: Side
-    match: Match
-    created_at: float = now_time()
+class ObjectModel(BaseModel):
+    object_id: int
+    pos: Position
 
+class BoardUpdate(BaseModel):
+    objects: list[ObjectModel]
 
-class Score(BaseModel):
-    match: UUID
-    left_side: int
-    right_side: int
-    created_at: float = now_time()
+class BallModel(BaseModel):
+    pos: Position = Position(x=(settings.PITCH_LEFT_BORDER+settings.PITCH_RIGHT_BORDER)//2,y=(settings.PITCH_DOWN_BORDER + settings.PITCH_UP_BORDER)//2)
 
 
 EVENT_NAMES = {

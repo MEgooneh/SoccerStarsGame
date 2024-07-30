@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import socket
 import logging
 
-from .Models import User, UserRegisterRequest, Match, MatchRequest, MouseUpdate, dump_event, load_event
+from .Models import User, UserRegisterRequest, Match, MatchRequest, MouseUpdate, MouseModel, dump_event, load_event
 from .Player import Side
 
 from utils.socket import socket_ordered_recv_message, socket_ordered_send_message
@@ -20,7 +20,7 @@ logging.basicConfig(
 class SocketClient:
 
     BUFFER_SIZE = 1024
-    SERVER_ADDR = (('127.0.0.1', 8080))
+    SERVER_ADDR = (('127.0.0.1', 3022))
 
     def __init__(self):
         self.user: User = None
@@ -73,6 +73,10 @@ class SocketClient:
     def make_match_request(self):
         match_req = MatchRequest(user=self.user)
         self.send_event(match_req)
+
+    def send_my_mouse(self, mouse_model: MouseModel):
+        mouse_update = MouseUpdate(user=self.user, match=self.match, mouse=mouse_model)
+        self.send_event(mouse_update)
     
     def am_i_in_the_match(self, match: Match) -> bool:
         return self.user == match.left_side_user or self.user == match.right_side_user
@@ -96,6 +100,7 @@ class SocketClient:
         event = self.get_event()
         event_name, mouse_update, timestamp = event["event"], event["content"], event["timestamp"]
         if event_name == "mouse_update":
+            logging.info(f"Mouse update: {mouse_update=} ")
             return mouse_update
         else:
             logging.error(f"Unexpected event recieved in get_opponent_mouse_update: {event_name=}, {mouse_update=}, {timestamp=} ")

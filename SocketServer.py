@@ -4,6 +4,7 @@ import socket
 import logging
 import random
 import select
+import _thread
 
 from src.Models import User, UserRegisterRequest, Match, MatchRequest, MouseUpdate, dump_event, load_event
 from src.Player import Side
@@ -23,7 +24,7 @@ logging.basicConfig(
 class SocketServer:
 
     BUFFER_SIZE = 4096
-    HOST_SERVER_ADDR = ('0.0.0.0', 8080)
+    HOST_SERVER_ADDR = ('0.0.0.0', 3022)
 
     def __init__(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -71,7 +72,7 @@ class SocketServer:
 
     def new_user_joined(self, client, addr):
         self.addresses[client] = addr
-        user = User(ip=addr[0], port=addr[1])
+        user = User(uid = self.count_users, ip=addr[0], port=addr[1])
         self.users.append(user)
         self.users_client[user.uid] = client 
         self.client_users[client] = user
@@ -144,29 +145,25 @@ class SocketServer:
             match_req for match_req in self.match_request_queue if now_time() - match_req.created_at <= EXPIRATION_OF_MATCH_REQ
             ]
         
+    def client_run(self, client: socket.socket, user):
+        while True:
+            self.run_event_router(client, user)
+
     def run(self):
+        self.count_users = 0
         self.connections = [self.socket]
         while True:
-            insock, outsock, exceptsock = select.select(self.connections, [], [])
-            
+            self.count_users += 1
             self.remove_expired_match_request()
 
-            for s in insock:
-                if s == self.socket:
 
-                    client, addr = self.socket.accept()
+            client, addr = self.socket.accept()
 
-                    self.connections.append(client)
+            self.connections.append(client)
 
-                    user = self.new_user_joined(client, addr)
+            user = self.new_user_joined(client, addr)
 
-                    self.run_event_router(client, user)
-                else:
-                    client = s
-
-                    user = self.retrieve_user(client)
-
-                    self.run_event_router(client, user)  
+            _thread.start_new_thread(self.client_run, (client, user))                
     
 
         
