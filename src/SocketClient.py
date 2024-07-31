@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 
 class SocketClient:
-    SERVER_ADDR = (('192.168.26.102', 3022))
+    SERVER_ADDR = (('127.0.0.1', 3022))
 
     def __init__(self):
         self.user: User = None
