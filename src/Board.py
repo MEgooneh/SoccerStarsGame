@@ -5,6 +5,8 @@ from .Player import Player, GoalKeeper, Defender, Striker, Side
 from .Ball import Ball
 from .Object import Object
 import settings
+from .Models import ObjectModel, MouseModel, BoardUpdate
+from .Mouse import Mouse
 
 from typing import TYPE_CHECKING
 
@@ -15,6 +17,7 @@ class Board:
 
     def __init__(self, game):
         self.game: Game = game
+        self.mouse = Mouse(self.game)
         self.ball: Ball = None
         self.left_goalkeeper: GoalKeeper = None
         self.left_defenders: list[Defender] = []
@@ -195,6 +198,19 @@ class Board:
     def show_scoreboard(self):
         self.show_scores()
         self.show_names()
+
+    def dump_board(self) -> BoardUpdate:
+        mouse = self.mouse.dump_mouse()
+        objects = []
+        for obj in self.all_objects:
+            objects.append(obj.dump_object())
+        return BoardUpdate(mouse=mouse, objects=objects)
+    
+    def load_board(self, board: BoardUpdate):
+        self.mouse.load_mouse(board.mouse)
+        for obj in board.objects:
+            Object.objects_list[obj.id].load_object(obj)
+
 
     
 

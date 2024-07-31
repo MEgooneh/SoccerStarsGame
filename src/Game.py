@@ -38,16 +38,16 @@ class Game:
 
 
     __singleton = False
-    def __init__(self, is_multiplayer=False, socket_client=None,):
+    def __init__(self, is_multiplayer=False, socket_client=None):
         if Game.__singleton:
             raise Exception("Game is singleton, more than one instance is not allowed")
         Game.__singleton = True
         
         self.is_multiplayer = is_multiplayer
         self.socket = socket_client
-        self.mouse_handler = Mouse(self, socket_client)
 
         self.turn = None
+        self.scored_side = None
         self.rules_freezed_for_ceremony_finish_time = 0
         self.scores: dict[Side, int] = {Side.RED: 0, Side.BLUE: 0}
         self.dragged_player: Player = None
@@ -55,9 +55,9 @@ class Game:
         self.left_side_name = "Player 1"
         self.right_side_name = "Player 2"
         self.board: Board = Board(self)    
-        self._prev_frame_board_was_idle : bool | None = None
         self.winner = None
         self.is_finished = False
+        self._prev_frame_board_was_idle : bool | None = True
 
     def is_ceremony_running(self) -> bool:
         return self.rules_freezed_for_ceremony_finish_time > pygame.time.get_ticks()
@@ -69,9 +69,20 @@ class Game:
         return self.is_ceremony_running() and not self.is_finished
     
     def end_of_turn_jobs(self):
-        pass
+        for player in self.board.all_players:
+                player.put_player_out_of_the_goal()
+        self.board.left_goalkeeper.keep_goalkeeper_in_penalty_area()
+        self.board.right_goalkeeper.keep_goalkeeper_in_penalty_area()
 
-    def update(self):
+        if self.scored_side is None:
+            self.swap_turn()
+        elif self.scored_side == Side.BLUE:
+            self.turn = Side.RED
+        else:
+            self.turn = Side.BLUE
+        self.scored_side = None
+
+    def update_in_my_turn(self):
         objects = self.board.all_objects
         for obj in objects:
             obj.pre_update_velocity()
@@ -82,12 +93,23 @@ class Game:
         for obj in objects:
             obj.update_pos()
 
-        if self._prev_frame_board_was_idle != self.board.is_idle():
-            for player in self.board.all_players:
-                player.put_player_out_of_the_goal()
-            self.board.left_goalkeeper.keep_goalkeeper_in_penalty_area()
-            self.board.right_goalkeeper.keep_goalkeeper_in_penalty_area()
+        if not self._prev_frame_board_was_idle and self.board.is_idle():
+            self.end_of_turn_jobs()
+
         self._prev_frame_board_was_idle = self.board.is_idle()
+
+    def update_in_opponent_turn(self):
+        if not self._prev_frame_board_was_idle and self.board.is_idle():
+            self.end_of_turn_jobs()
+
+        self._prev_frame_board_was_idle = self.board.is_idle()
+
+    def update(self):
+        if (self.is_multiplayer and self.turn == self.socket.side) or not self.is_multiplayer:
+            self.update_in_my_turn()
+        
+        else:
+            self.update_in_opponent_turn()
 
     def swap_turn(self):
         self.turn = Side.RED if self.turn == Side.BLUE else Side.BLUE
@@ -102,7 +124,7 @@ class Game:
         self.dragged_player.velocity = releasing_force_booster*(self.dragged_player.pos - self.dragging_mouse_pos).astype(np.longdouble)
         self.dragged_player = None
         self.dragging_mouse_pos = None
-        self.swap_turn()
+        # self.swap_turn()
 
     def draw_dragged_player_shot_hint(self, mouse):
         self.dragging_mouse_pos = mouse.get_pos()
@@ -114,23 +136,22 @@ class Game:
                 end_pos=self.dragged_player.pos*2 - self.dragging_mouse_pos,
                 width=4
             )
-        
+
     def pygame_event_mouse_related(self):
-        mouse = self.mouse_handler.get_mouse() 
-        if mouse.is_click_down():
+        if self.board.mouse.is_click_down():
             players = self.board.all_players
             for player in players:
-                if np.linalg.norm(mouse.get_pos() - player.pos) < player.radius:
+                if np.linalg.norm(self.board.mouse.get_pos() - player.pos) < player.radius:
                     if player.is_activated():
                         self.start_dragging_player(player)
 
-        elif mouse.is_click_up():
+        elif self.board.mouse.is_click_up():
             if self.dragged_player:
                 self.releasing_dragged_player_shot()
 
-        elif mouse.is_click_hold():
+        elif self.board.mouse.is_click_hold():
             if self.dragged_player:
-                self.draw_dragged_player_shot_hint(mouse)
+                self.draw_dragged_player_shot_hint(self.board.mouse)
 
 
     def pygame_event_exit(self):
@@ -138,11 +159,9 @@ class Game:
             exit()
 
     def pygame_event_handle(self):
-        self.pygame_event_mouse_related()
-        
         self.pygame_event_exit()
-    
 
+        self.pygame_event_mouse_related()
     
     def pygame_refresh_background(self):
         self.board.show_screen()
@@ -187,8 +206,6 @@ class Game:
         self.is_finished = True
         self.winner_ceremony_start()
 
-    
-
     def goal_ceremony_start(self):
         self.rules_freezed_for_ceremony_finish_time = pygame.time.get_ticks() + settings.GOAL_CEREMONY_TIME
         self.play_crowd_clapping_sound()
@@ -211,10 +228,7 @@ class Game:
 
         self.scores[scored_side] += 1
 
-        if scored_side == Side.BLUE:
-            self.turn = Side.RED
-        elif scored_side == Side.RED:
-            self.turn = Side.BLUE
+        self.scored_side = scored_side
 
         if self.scores[scored_side] == 3:
             self.winner = scored_side
@@ -231,20 +245,73 @@ class Game:
         
         self.scored(scored_side)
 
-    def multiplayer_updates(self):
-        if self.socket.is_in_match:
-            self.left_side_name = self.socket.match.left_side_user.username
-            self.right_side_name = self.socket.match.right_side_user.username
-        
-    def run(self):
+
+    def show_opponent_board_multiplayer(self):
+        board_update = self.socket.get_board_from_opponent()
+
+        self.board.load_board(board_update)
+
+        self.pygame_refresh_background()
+
+        self.pygame_clock_tick_set_dt()
+
+        self.pygame_event_handle()
+
+        self.pygame_draw()
+
+        self.pygame_update()
+
+        self.check_ceremony_end()
+
+        if not self.is_ceremony_running():
+            self.pygame_goal_check()
+
+    def run_game_in_my_turn_multiplayer(self):
+
+
+        self.board.mouse.update_my_mouse()
+
+        self.pygame_refresh_background()
+
+        self.pygame_clock_tick_set_dt()
+
+        self.pygame_event_handle()
+
+        self.pygame_draw()
+
+        self.pygame_update()
+
+        self.check_ceremony_end()
+
+
+
+        if not self.is_ceremony_running():
+            self.pygame_goal_check()
+
+        self.socket.send_board_to_opponent(self.board.dump_board())
+
+    
+    def run_multiplayer_game(self):
         running = True
 
         self.turn = Game.FIRST_TURN
 
         while running:
             
-            if self.is_multiplayer:
-                self.multiplayer_updates()
+            if self.turn == self.socket.side:
+                self.run_game_in_my_turn_multiplayer()
+            else:
+                self.show_opponent_board_multiplayer()
+
+
+    def run_monoplayer_game(self):
+        running = True
+
+        self.turn = Game.FIRST_TURN
+
+        while running:
+
+            self.board.mouse.update_my_mouse()
 
             self.pygame_refresh_background()
 
@@ -260,6 +327,14 @@ class Game:
 
             if not self.is_ceremony_running():
                 self.pygame_goal_check()
+
+
+    def run(self):
+        if self.is_multiplayer:
+            self.run_multiplayer_game()
+        else:
+            self.run_monoplayer_game()
+        
 
     def __del__(self):
         self.pygame_quit()

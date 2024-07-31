@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
 
+from .Models import ObjectModel, Position, Velocity
 import settings
 
 from typing import TYPE_CHECKING
@@ -9,8 +10,13 @@ if TYPE_CHECKING:
     from .Game import Game
 
 class Object:
-
+    count_objects = 0
+    objects_list: list[object] = []
     def __init__(self, game: 'Game', mass: float, radius: float, pos: np.ndarray, velocity: np.ndarray):
+        self.id = Object.count_objects
+        Object.count_objects += 1
+        Object.objects_list.append(self)
+
         self.game = game
         self.mass = mass
         self.radius = radius
@@ -57,24 +63,24 @@ class Object:
             theta = np.arctan((self.pos[1] - other.pos[1])/(self.pos[0] - other.pos[0]))
 
         v1_rot = np.array([
-                np.dot(self.velocity, np.array([np.cos(theta), np.sin(theta)])),
-                np.dot(self.velocity, np.array([-np.sin(theta), np.cos(theta)])),
-            ])
+                np.dot(self.velocity, np.array([np.cos(theta), np.sin(theta)], dtype=np.longdouble)),
+                np.dot(self.velocity, np.array([-np.sin(theta), np.cos(theta)], dtype=np.longdouble)),
+            ], dtype=np.longdouble)
         
         v2_rot = np.array([
-                np.dot(other.velocity, np.array([np.cos(theta), np.sin(theta)])),
-                np.dot(other.velocity, np.array([-np.sin(theta), np.cos(theta)])),
-            ])
+                np.dot(other.velocity, np.array([np.cos(theta), np.sin(theta)], dtype=np.longdouble)),
+                np.dot(other.velocity, np.array([-np.sin(theta), np.cos(theta)], dtype=np.longdouble)),
+            ], dtype=np.longdouble)
 
         v1_prim_rot = np.array([
             (v1_rot[0]*(self.mass - other.mass) + 2*other.mass*v2_rot[0]) / (self.mass + other.mass),
             v1_rot[1]
-        ])
+        ], dtype=np.longdouble)
 
         self._updated_velocity = np.array([
                 v1_prim_rot[0]*np.cos(theta) - v1_prim_rot[1]*np.sin(theta),
                 v1_prim_rot[0]*np.sin(theta) + v1_prim_rot[1]*np.cos(theta)
-            ])
+            ], dtype=np.longdouble)
     
     def collision_object_play_sound(self, other=None):
         ...
@@ -182,6 +188,15 @@ class Object:
 
         
     def draw(self, screen: pygame.Surface): ...
+
+    def load_object(self, obj_model: ObjectModel):
+        self.pos = obj_model.pos.to_ndarray()
+        self.velocity = obj_model.velocity.to_ndarray()
+
+    def dump_object(self):
+        pos = self.pos.astype(int)
+        velocity = self.velocity
+        return ObjectModel(id=self.id, pos=Position(x=pos[0], y=pos[1]), velocity=Velocity(x=velocity[0], y=velocity[1]))
 
     def __repr__(self) -> str:
         return (f"Object(mass={self.mass}, radius={self.radius}, "
