@@ -2,6 +2,8 @@ from src.Game import Game
 from src.Models import User, Match, MatchRequest
 from src.SocketClient import SocketClient
 
+from pygame.display import set_caption as set_pygame_window_title
+
 
 def multiplayer_game():
     username = input("type your username:\n")
@@ -25,6 +27,7 @@ def multiplayer_game():
     game.pygame_init()
     game.load_assets()
     game.board.init_objects()
+    set_pygame_window_title(username)
     game.run()
 
 def monoplayer_game():

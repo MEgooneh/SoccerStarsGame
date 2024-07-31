@@ -37,14 +37,20 @@ class SocketServer:
 
     def send_event(self, client: socket.socket, model: BaseModel):
         message = dump_event(model)
-        socket_ordered_send_message(client, message)
+        try:
+            socket_ordered_send_message(client, message)
+        except:
+            logging.error(f"Error sending message to client{client=}, {message=}")
 
         logging.info(f"Message sent to client: {client=}, {message=}")
 
     def get_event(self, client: socket.socket):
-        client
-        message = socket_ordered_recv_message(client)
-        
+        try:
+            message = socket_ordered_recv_message(client)
+        except:
+            return None
+        if message is None:
+            return None
         logging.info(f"Recieving from client: {client=}, {message=}")
 
         return load_event(message)
@@ -76,21 +82,27 @@ class SocketServer:
             logging.info("The match request queue is empty")
 
     def event_board_update(self, client: socket.socket, user: User, board_update_model: BoardUpdate):
-        print(user)
         opponent_client = self.opponents[client]
         self.send_event(opponent_client, board_update_model)
 
-
+    def close_connection(self, client):
+        if client in self.opponents.keys():
+            opponent_client = self.opponents[client]
+            opponent_client.close()
+        client.close()
+        exit()
 
     def client_run(self, client: socket.socket, user):
         while True:
             response = self.get_event(client)
+            if response is None:
+                self.close_connection(client)
+                break
             event_name, content = response["event"], response["content"]
             match event_name:
                 case "board_update":
                     self.event_board_update(client, user, content)
                 case "match_request":
-                    print("salam")
                     self.event_match_request(client, user, content)
 
 

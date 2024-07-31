@@ -195,6 +195,14 @@ class Board:
         blue_score_rect = blue_score_surface.get_rect(center=settings.SCOREBAR_PLACE_BLUE_SCORE)
         self.screen.blit(blue_score_surface, blue_score_rect)
 
+    def show_timer(self):
+        remained_seconds = self.game.turn_last_second - pygame.time.get_ticks()//1000
+        minutes = str(remained_seconds // 60).zfill(2)
+        seconds = str(remained_seconds % 60).zfill(2)
+        surface = self.game.media.font.render(f"{minutes}:{seconds}", True, "white")
+        rect = surface.get_rect(center=settings.TIMER_COORDINATES)
+        self.screen.blit(surface, rect)
+
     def show_scoreboard(self):
         self.show_scores()
         self.show_names()

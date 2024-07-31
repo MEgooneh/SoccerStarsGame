@@ -57,6 +57,7 @@ class Game:
         self.board: Board = Board(self)    
         self.winner = None
         self.is_finished = False
+        self.turn_last_second = settings.TURN_SECONDS
         self._prev_frame_board_was_idle : bool | None = True
 
     def is_ceremony_running(self) -> bool:
@@ -74,6 +75,8 @@ class Game:
         self.board.left_goalkeeper.keep_goalkeeper_in_penalty_area()
         self.board.right_goalkeeper.keep_goalkeeper_in_penalty_area()
 
+        self.turn_last_second = pygame.time.get_ticks()//1000 + settings.TURN_SECONDS
+
         if self.scored_side is None:
             self.swap_turn()
         elif self.scored_side == Side.BLUE:
@@ -81,6 +84,9 @@ class Game:
         else:
             self.turn = Side.BLUE
         self.scored_side = None
+
+    def is_turns_times_up(self):
+        return self.turn_last_second <= pygame.time.get_ticks()//1000
 
     def update_in_my_turn(self):
         objects = self.board.all_objects
@@ -93,7 +99,7 @@ class Game:
         for obj in objects:
             obj.update_pos()
 
-        if not self._prev_frame_board_was_idle and self.board.is_idle():
+        if (not self._prev_frame_board_was_idle and self.board.is_idle()) or (self.is_turns_times_up() and self.board.is_idle()):
             self.end_of_turn_jobs()
 
         self._prev_frame_board_was_idle = self.board.is_idle()
@@ -173,6 +179,7 @@ class Game:
         self.board.draw_objects(self.board.all_objects)
         self.board.draw_goals()
         self.board.show_scoreboard()
+        self.board.show_timer()
 
         if self.is_goal_ceremony_running():
             self.board.show_goal_ceremony()

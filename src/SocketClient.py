@@ -37,6 +37,8 @@ class SocketClient:
     def get_event(self):
         try:
             message = socket_ordered_recv_message(self.socket)
+            if message is None:
+                raise Exception
         except Exception as e:
             logging.error(f"Recieving from server Error: user({self.user})")
             raise Exception(f"Recieving from server Error: {e=}")
@@ -70,6 +72,9 @@ class SocketClient:
         event_name, board, timestamp = event["event"], event["content"], event["timestamp"]
         if event_name == "board_update":
             return board
+
+    def exit_game(self):
+        self.socket.close()
 
     def send_board_to_opponent(self, board_update: BoardUpdate):
         self.send_event(board_update)

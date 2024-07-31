@@ -175,7 +175,7 @@ class Object:
                 y_add = -1 if self.pos[1] == settings.PITCH_DOWN_BORDER-self.radius else 1 
                 self.pos += np.array([x_add, y_add])
 
-            if np.linalg.norm(obj.pos - self.pos) <= obj.radius + self.radius:
+            if np.linalg.norm(obj.pos - self.pos) < obj.radius + self.radius:
                 self.pos =  obj.pos + (self.pos - obj.pos) / np.linalg.norm(self.pos - obj.pos) * (obj.radius + self.radius)
 
 
