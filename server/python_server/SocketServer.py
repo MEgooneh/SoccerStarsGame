@@ -42,7 +42,6 @@ class SocketServer:
         except:
             logging.error(f"Error sending message to client{client=}, {message=}")
 
-        logging.info(f"Message sent to client: {client=}, {message=}")
 
     def get_event(self, client: socket.socket):
         try:
@@ -51,7 +50,6 @@ class SocketServer:
             return None
         if message is None:
             return None
-        logging.info(f"Recieving from client: {client=}, {message=}")
 
         return load_event(message)
     
@@ -90,6 +88,8 @@ class SocketServer:
             opponent_client = self.opponents[client]
             opponent_client.close()
         client.close()
+        logging.info(f"A game finished.")
+
         exit()
 
     def client_run(self, client: socket.socket, user):
