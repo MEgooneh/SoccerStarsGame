@@ -16,5 +16,8 @@ implementation for SoccerStars game in Python using Pygame.
 #### running server for multiplayer game
 ```python3 server.py```
 
-#### running a client
-```python3 main.py```
+#### running a client with Command-line interface
+```python3 main_cli_menu.py```
+
+#### running a client with Graphical user interface
+```python3 main_gui_menu.py```
