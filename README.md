@@ -21,3 +21,6 @@ implementation for SoccerStars game in Python using Pygame.
 
 #### running a client with Graphical user interface
 ```python3 main_gui_menu.py```
+
+#### dependencies 
+using https://github.com/nlohmann/json for cpp server under MIT license
