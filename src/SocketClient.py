@@ -14,15 +14,14 @@ logging.basicConfig(
 )
 
 class SocketClient:
-    SERVER_ADDR = (('127.0.0.1', 3022))
 
-    def __init__(self):
+    def __init__(self, server_addr: tuple[str, int] = ('127.0.0.1', 3022)):
         self.user: User = None
         self.match: Match = None
         self.side: Side | None = None
         self.is_in_match: bool = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect(SocketClient.SERVER_ADDR)
+        self.socket.connect(server_addr)
 
     def send_event(self, model: BaseModel):
         message = dump_event(model)
@@ -32,7 +31,6 @@ class SocketClient:
             logging.error(f"Sending to server Error: {self.user}, message=({message})")
             raise Exception("Sending to server Error")
 
-        logging.info(f"Message sent to server: user({self.user}), message({message})")
 
     def get_event(self):
         try:
@@ -42,7 +40,6 @@ class SocketClient:
         except Exception as e:
             logging.error(f"Recieving from server Error: user({self.user})")
             raise Exception(f"Recieving from server Error: {e=}")
-        logging.info(f"Recieving from server: user({self.user}), message({message})")
 
         return load_event(message)
     

@@ -36,7 +36,6 @@ struct SocketServer{
         serverAddress.sin_family = AF_INET; 
         serverAddress.sin_port = htons(3022); 
         serverAddress.sin_addr.s_addr = INADDR_ANY; 
-        cout << "Starting SoccerStar socket server, listening on 0.0.0.0:3022" ;
         bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)); 
         listen(serverSocket, 5); 
     }
@@ -196,7 +195,8 @@ struct SocketServer{
 
 
 int main() { 
-    SocketServer server = SocketServer(); 
+    SocketServer server = SocketServer();
+    cout << "Starting SoccerStar socket server, listening on 0.0.0.0:3022" ;
     server.run(); 
 	return 0; 
 }
