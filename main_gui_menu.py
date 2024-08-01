@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import font as tkfont
-import threading
 import json
 
 from src.Game import Game

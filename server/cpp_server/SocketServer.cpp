@@ -44,7 +44,7 @@ struct SocketServer{
         char buffer[4] = {0}; 
         ssize_t bytesRead = recv(client, buffer, 4, 0); 
         if (bytesRead != 4) {
-            //perror("recv failed");
+            perror("recv failed");
             return "";
         }
         int message_len;
@@ -56,7 +56,7 @@ struct SocketServer{
 
         bytesRead = recv(client, messageBuffer, message_len, 0);
         if (bytesRead != message_len) {
-            //perror("recv failed");
+            perror("recv failed");
             delete[] messageBuffer;
             return "";
         }
@@ -75,7 +75,7 @@ struct SocketServer{
             serialized = json::parse(msg); 
         }
         catch(...){
-            //perror("parsing error!"); 
+            perror("parsing error!"); 
         }
         
         return serialized;
@@ -92,12 +92,12 @@ struct SocketServer{
         string message_str = message.dump(); 
         uint32_t message_length = htonl(message_str.size());
         if (send(client, &message_length, sizeof(message_length), 0) != sizeof(message_length)) {
-            //perror("send failed");
+            perror("send failed");
             return;
         }
 
         if (send(client, message_str.c_str(), message_str.size(), 0) != static_cast<ssize_t>(message_str.size())) {
-            //perror("send failed");
+            perror("send failed");
             return;
         }
     }
@@ -174,7 +174,12 @@ struct SocketServer{
     void client_run(int client, User* user){
         srand(time(0) + user->id); 
         while(true){
-            this->event_router(client, user); 
+            try{
+                this->event_router(client, user); 
+            }
+            catch(...){
+                break;
+            }
         }
     }
 
