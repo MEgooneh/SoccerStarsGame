@@ -4,9 +4,10 @@ from .Player import Side
 from utils.socket import socket_ordered_recv_message, socket_ordered_send_message
 from pydantic import BaseModel
 import logging
+import os
 
 logging.basicConfig(
-            filename = 'log/client/socket.log',
+            filename = os.path.join('log', 'client', 'client.log'),
             level=logging.INFO,
             format = "{asctime} - {levelname} - {message}",
             style="{",

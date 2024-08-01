@@ -10,9 +10,10 @@ from src.Models import User, Match, MatchRequest, MouseModel, ObjectModel, Board
 from src.Player import Side
 from utils.socket import socket_ordered_recv_message, socket_ordered_send_message
 from utils.time import now_time
+import os
 
 logging.basicConfig(
-    filename = 'log/server/server.log',
+    filename = os.path.join('log', 'server', 'server.log'),
     level=logging.INFO,
     format = "{asctime} - {levelname} - {message}",
     style="{",
