@@ -105,6 +105,9 @@ class Game:
         self._prev_frame_board_was_idle = self.board.is_idle()
 
     def update_in_opponent_turn(self):
+        objects = self.board.all_objects
+        for obj in objects:
+            obj.pre_update_velocity()
         if not self._prev_frame_board_was_idle and self.board.is_idle():
             self.end_of_turn_jobs()
 
@@ -115,7 +118,7 @@ class Game:
             self.update_in_my_turn()
         
         else:
-            self.update_in_opponent_turn()
+            self.update_in_my_turn()
 
     def swap_turn(self):
         self.turn = Side.RED if self.turn == Side.BLUE else Side.BLUE
